@@ -551,7 +551,6 @@ apply_zshrc "cowsay + neofetch greeting" \
 
 # Greeting on interactive shells
 if [[ \$- == *i* ]]; then
-  command -v cowsay  >/dev/null 2>&1 && echo \"Welcome!\" | cowsay -f sheep
   command -v neofetch >/dev/null 2>&1 && neofetch
 fi
 EOF"
