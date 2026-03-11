@@ -588,9 +588,10 @@ get_local_ip() {
 if [[ \$- == *i* ]]; then
   command -v neofetch >/dev/null 2>&1 && neofetch
   ip=$(get_local_ip)
+  pub_ip=\$(curl -s --connect-timeout 2 ifconfig.me)
   w -h 2>/dev/null || w --no-header 2>/dev/null
   print -P "%F{white}--%f"
-  print -P "%F{cyan}$(date '+%Y/%m/%d %H:%M:%S')%f | IP: %F{green}${ip}%f | Uptime: %F{yellow}$(uptime_seconds)%f"
+  print -P "%F{cyan}$(date '+%Y/%m/%d %H:%M:%S')%f | IP: %F{green}${ip}%f | Public: %F{green}\${pub_ip:--}%f | Uptime: %F{yellow}$(uptime_seconds)%f"
 fi
 EOF"
 
