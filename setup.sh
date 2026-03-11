@@ -195,13 +195,29 @@ failed_pkgs=()
 
 pkg_cmd() {
   case "$1" in
-    ripgrep) echo "rg" ;;
-    neovim)  echo "nvim" ;;
-    httpie)  echo "http" ;;
-    fd)      echo "fd" ;;
-    ncdu)    echo "ncdu" ;;
-    *)       echo "$1" ;;
+    ripgrep)   echo "rg" ;;
+    neovim)    echo "nvim" ;;
+    httpie)    echo "http" ;;
+    fd)        command -v fd  >/dev/null 2>&1 && echo "fd" || echo "fdfind" ;;
+    fd-find)   command -v fd  >/dev/null 2>&1 && echo "fd" || echo "fdfind" ;;
+    git-delta) echo "delta" ;;
+    ncdu)      echo "ncdu" ;;
+    *)         echo "$1" ;;
   esac
+}
+
+# Map generic package name → distro-specific install name
+pkg_install_name() {
+  local pkg="$1"
+  if [[ "$PKG_INSTALL" == *apt* ]]; then
+    case "$pkg" in
+      fd)    echo "fd-find" ;;
+      delta) echo "git-delta" ;;
+      *)     echo "$pkg" ;;
+    esac
+  else
+    echo "$pkg"
+  fi
 }
 
 install_pkg() {
@@ -213,7 +229,7 @@ install_pkg() {
 
   if ! command -v "$cmd" >/dev/null 2>&1; then
     # ── Needs install: animated bar + spinner ──
-    ( $PKG_INSTALL "$pkg" >/dev/null 2>&1 ) &
+    ( $PKG_INSTALL "$(pkg_install_name "$pkg")" >/dev/null 2>&1 ) &
     local pid=$!
     local frame=0
     local start=$SECONDS
@@ -396,7 +412,7 @@ elif [ "$OS" == "linux" ]; then
 fi
 
 # ── Packages ────────────────────────────────
-pkgs=(zsh git curl fzf zoxide delta tig bat tree ripgrep jq httpie tmux neovim gh neofetch cowsay fd lazygit duf ncdu)
+pkgs=(zsh git curl fzf zoxide delta tig bat tree ripgrep jq httpie tmux neovim gh screenfetch cowsay fd lazygit duf ncdu)
 total=${#pkgs[@]}
 
 print_section "Installing Packages (${total} total)"
@@ -559,7 +575,7 @@ export NVM_DIR=\"\$HOME/.nvm\"
 NVMEOF"
 
 apply_zshrc "system greeting" \
-  'neofetch' \
+  '# Greeting on interactive shells' \
   "cat >> \"\$ZSHRC\" << 'EOF'
 
 # Greeting on interactive shells
@@ -599,7 +615,13 @@ get_local_ip() {
 }
 
 if [[ \$- == *i* ]]; then
-  command -v neofetch >/dev/null 2>&1 && neofetch
+  if command -v screenfetch >/dev/null 2>&1; then
+    screenfetch
+  elif command -v fastfetch >/dev/null 2>&1; then
+    fastfetch
+  elif command -v neofetch >/dev/null 2>&1; then
+    neofetch
+  fi
   ip=\$(get_local_ip)
   pub_ip=\$(curl -4 -s --connect-timeout 2 ifconfig.me)
   w -h 2>/dev/null || w --no-header 2>/dev/null
