@@ -193,12 +193,25 @@ skipped_pkgs=()
 done_pkgs=()
 failed_pkgs=()
 
+pkg_cmd() {
+  case "$1" in
+    ripgrep) echo "rg" ;;
+    neovim)  echo "nvim" ;;
+    httpie)  echo "http" ;;
+    fd)      echo "fd" ;;
+    ncdu)    echo "ncdu" ;;
+    *)       echo "$1" ;;
+  esac
+}
+
 install_pkg() {
   local pkg=$1
+  local cmd
+  cmd=$(pkg_cmd "$pkg")
 
   printf '%s' "$HIDE"
 
-  if ! command -v "$pkg" >/dev/null 2>&1; then
+  if ! command -v "$cmd" >/dev/null 2>&1; then
     # ── Needs install: animated bar + spinner ──
     ( $PKG_INSTALL "$pkg" >/dev/null 2>&1 ) &
     local pid=$!
