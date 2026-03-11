@@ -569,9 +569,19 @@ uptime_seconds() {
 
 get_local_ip() {
   if [[ "$(uname)" == "Darwin" ]]; then
-    ipconfig getifaddr en0 2>/dev/null
+    local ip iface
+    for iface in en0 en1 en2 en3 en4 en5; do
+      ip=$(ipconfig getifaddr "$iface" 2>/dev/null) && [[ -n "$ip" ]] && echo "$ip" && return
+    done
+    iface=$(route get default 2>/dev/null | awk '/interface:/{print $2}')
+    [[ -n "$iface" ]] && ipconfig getifaddr "$iface" 2>/dev/null
   else
-    hostname -I 2>/dev/null | awk '{print $1}'
+    local ip
+    ip=$(hostname -I 2>/dev/null | awk '{print $1}')
+    if [[ -z "$ip" ]]; then
+      ip=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}')
+    fi
+    echo "$ip"
   fi
 }
 
