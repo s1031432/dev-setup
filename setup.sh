@@ -550,8 +550,26 @@ apply_zshrc "cowsay + neofetch greeting" \
   "cat >> \"\$ZSHRC\" << 'EOF'
 
 # Greeting on interactive shells
+
+uptime_seconds() {
+  boot=$(sysctl -n kern.boottime | awk '{print $4}' | tr -d ',')
+  now=$(date +%s)
+  diff=$((now - boot))
+
+  d=$((diff/86400))
+  h=$((diff%86400/3600))
+  m=$((diff%3600/60))
+  s=$((diff%60))
+
+  printf "%dd %02d:%02d:%02d" $d $h $m $s
+}
+
 if [[ \$- == *i* ]]; then
-  command -v neofetch >/dev/null 2>&1 && neofetch
+  neofetch
+  ip=$(ipconfig getifaddr en0 2>/dev/null)
+  w -h
+  print -P "%F{white}--%f"
+  print -P "%F{cyan}$(date '+%Y/%m/%d %H:%M:%S')%f | IP: %F{green}${ip}%f | Uptime: %F{yellow}$(uptime_seconds)%f" 
 fi
 EOF"
 
