@@ -545,31 +545,42 @@ export NVM_DIR=\"\$HOME/.nvm\"
 [ -s \"\$NVM_DIR/bash_completion\" ] && . \"\$NVM_DIR/bash_completion\"
 NVMEOF"
 
-apply_zshrc "cowsay + neofetch greeting" \
+apply_zshrc "system greeting" \
   'neofetch' \
   "cat >> \"\$ZSHRC\" << 'EOF'
 
 # Greeting on interactive shells
 
 uptime_seconds() {
-  boot=$(sysctl -n kern.boottime | awk '{print $4}' | tr -d ',')
-  now=$(date +%s)
-  diff=$((now - boot))
+  if [[ "$(uname)" == "Darwin" ]]; then
+    local boot=$(sysctl -n kern.boottime | awk '{gsub(/,/,"",$4); print $4}')
+    local elapsed=$(( $(date +%s) - boot ))
+  else
+    local elapsed=$(awk '{printf "%d", $1}' /proc/uptime)
+  fi
 
-  d=$((diff/86400))
-  h=$((diff%86400/3600))
-  m=$((diff%3600/60))
-  s=$((diff%60))
+  local d=$((elapsed/86400))
+  local h=$((elapsed%86400/3600))
+  local m=$((elapsed%3600/60))
+  local s=$((elapsed%60))
 
-  printf "%dd %02d:%02d:%02d" $d $h $m $s
+  printf "%dd %02d:%02d:%02d" "$d" "$h" "$m" "$s"
+}
+
+get_local_ip() {
+  if [[ "$(uname)" == "Darwin" ]]; then
+    ipconfig getifaddr en0 2>/dev/null
+  else
+    hostname -I 2>/dev/null | awk '{print $1}'
+  fi
 }
 
 if [[ \$- == *i* ]]; then
-  neofetch
-  ip=$(ipconfig getifaddr en0 2>/dev/null)
-  w -h
+  command -v neofetch >/dev/null 2>&1 && neofetch
+  ip=$(get_local_ip)
+  w -h 2>/dev/null || w --no-header 2>/dev/null
   print -P "%F{white}--%f"
-  print -P "%F{cyan}$(date '+%Y/%m/%d %H:%M:%S')%f | IP: %F{green}${ip}%f | Uptime: %F{yellow}$(uptime_seconds)%f" 
+  print -P "%F{cyan}$(date '+%Y/%m/%d %H:%M:%S')%f | IP: %F{green}${ip}%f | Uptime: %F{yellow}$(uptime_seconds)%f"
 fi
 EOF"
 
