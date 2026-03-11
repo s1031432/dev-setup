@@ -8,8 +8,6 @@ Installs 20+ essential CLI tools, configures Zsh with Oh My Zsh + Powerlevel10k,
 bash <(curl -fsSL https://raw.githubusercontent.com/s1031432/dev-setup/main/setup.sh)
 ```
 
-> Replace `s1031432` with your GitHub username after pushing.
-
 ---
 
 ## Demo
