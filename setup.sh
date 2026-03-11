@@ -552,46 +552,51 @@ apply_zshrc "system greeting" \
 # Greeting on interactive shells
 
 uptime_seconds() {
-  if [[ "$(uname)" == "Darwin" ]]; then
-    local boot=$(sysctl -n kern.boottime | awk '{gsub(/,/,"",$4); print $4}')
-    local elapsed=$(( $(date +%s) - boot ))
+  if [[ \"\$(uname)\" == \"Darwin\" ]]; then
+    local boot=\$(sysctl -n kern.boottime | awk '{gsub(/,/,\"\",\$4); print \$4}')
+    local elapsed=\$(( \$(date +%s) - boot ))
   else
-    local elapsed=$(awk '{printf "%d", $1}' /proc/uptime)
+    local elapsed=\$(awk '{printf \"%d\", \$1}' /proc/uptime)
   fi
 
-  local d=$((elapsed/86400))
-  local h=$((elapsed%86400/3600))
-  local m=$((elapsed%3600/60))
-  local s=$((elapsed%60))
+  local d=\$((elapsed/86400))
+  local h=\$((elapsed%86400/3600))
+  local m=\$((elapsed%3600/60))
+  local s=\$((elapsed%60))
 
-  printf "%dd %02d:%02d:%02d" "$d" "$h" "$m" "$s"
+  printf \"%dd %02d:%02d:%02d\" \"\$d\" \"\$h\" \"\$m\" \"\$s\"
 }
 
 get_local_ip() {
-  if [[ "$(uname)" == "Darwin" ]]; then
+  if [[ \"\$(uname)\" == \"Darwin\" ]]; then
     local ip iface
     for iface in en0 en1 en2 en3 en4 en5; do
-      ip=$(ipconfig getifaddr "$iface" 2>/dev/null) && [[ -n "$ip" ]] && echo "$ip" && return
+      ip=\$(ipconfig getifaddr \"\$iface\" 2>/dev/null) && [[ -n \"\$ip\" ]] && echo \"\$ip\" && return
     done
-    iface=$(route get default 2>/dev/null | awk '/interface:/{print $2}')
-    [[ -n "$iface" ]] && ipconfig getifaddr "$iface" 2>/dev/null
+    iface=\$(route get default 2>/dev/null | awk '/interface:/{print \$2}')
+    [[ -n \"\$iface\" ]] && ipconfig getifaddr \"\$iface\" 2>/dev/null
   else
     local ip
-    ip=$(hostname -I 2>/dev/null | awk '{print $1}')
-    if [[ -z "$ip" ]]; then
-      ip=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src") print $(i+1)}')
+    ip=\$(hostname -I 2>/dev/null | awk '{print \$1}')
+    if [[ -z \"\$ip\" ]]; then
+      ip=\$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if(\$i==\"src\") print \$(i+1)}')
     fi
-    echo "$ip"
+    echo \"\$ip\"
   fi
 }
 
 if [[ \$- == *i* ]]; then
   command -v neofetch >/dev/null 2>&1 && neofetch
-  ip=$(get_local_ip)
+  ip=\$(get_local_ip)
   pub_ip=\$(curl -4 -s --connect-timeout 2 ifconfig.me)
   w -h 2>/dev/null || w --no-header 2>/dev/null
-  print -P "%F{white}--%f"
-  print -P "%F{cyan}$(date '+%Y/%m/%d %H:%M:%S')%f | IP: %F{green}${ip}%f | Public: %F{green}\${pub_ip:--}%f | Uptime: %F{yellow}$(uptime_seconds)%f"
+  print -P \"%F{white}--%f\"
+  if [[ \"\$(uname)\" == \"Darwin\" ]]; then
+    loadavg=\$(sysctl -n vm.loadavg | sed 's/[{}]//g' | xargs)
+  else
+    loadavg=\$(cut -d' ' -f1-3 /proc/loadavg)
+  fi
+  print -P \"%F{cyan}\$(date '+%Y/%m/%d %H:%M:%S')%f | IP: %F{green}\${ip}%f | Public: %F{green}\${pub_ip:--}%f | Uptime: %F{yellow}\$(uptime_seconds)%f | Load: %F{magenta}\${loadavg}%f\"
 fi
 EOF"
 
